@@ -8,8 +8,8 @@ set -e  # Exit on any error
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-echo "Installing Node.js 20..."
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+echo "Installing Node.js 22..."
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 echo "Installing Apache web server..."
