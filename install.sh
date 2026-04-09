@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # WebUI Installation Script for Azure Debian VM
-# Version: 1.0.1
+# Version: 1.0.2
 # This script sets up the full-stack webui application
 
 set -e  # Exit on any error
@@ -20,17 +20,55 @@ sudo apt install -y apache2
 sudo a2enmod proxy proxy_http
 sudo systemctl enable apache2
 
-echo "Cloning the webui repository..."
-read -p "Enter the branch to use for webui (default: main): " BRANCH
-if [ -z "$BRANCH" ]; then
-    BRANCH=main
+WEBUI_DIR=""
+if [ -d ".git" ]; then
+    echo "Detected current directory is an existing webui repository."
+    WEBUI_DIR="$PWD"
+elif [ -d "$PWD/webui" ]; then
+    echo "Detected existing webui directory at $PWD/webui"
+    WEBUI_DIR="$PWD/webui"
 fi
-git clone -b $BRANCH https://github.com/solutions-hpe/webui.git webui
-cd webui
 
-# Create config file with selected branch
-echo "# WebUI Configuration" > webui.conf
-echo "BRANCH=$BRANCH" >> webui.conf
+if [ -n "$WEBUI_DIR" ]; then
+    read -p "Existing webui directory detected at $WEBUI_DIR. Reuse it? [Y/n] " REUSE_DIR
+    REUSE_DIR=${REUSE_DIR:-Y}
+    if [[ "$REUSE_DIR" =~ ^[Yy] ]]; then
+        cd "$WEBUI_DIR"
+        if [ -f webui.conf ]; then
+            read -p "webui.conf exists. Keep existing webui.conf? [Y/n] " KEEP_CONF
+            KEEP_CONF=${KEEP_CONF:-Y}
+            if [[ ! "$KEEP_CONF" =~ ^[Yy] ]]; then
+                rm -f webui.conf
+            fi
+        fi
+    else
+        echo "Removing existing webui directory..."
+        rm -rf "$WEBUI_DIR"
+        WEBUI_DIR=""
+    fi
+fi
+
+if [ -z "$WEBUI_DIR" ]; then
+    read -p "Enter the branch to use for webui (default: main): " BRANCH
+    BRANCH=${BRANCH:-main}
+    echo "Cloning the webui repository..."
+    git clone -b "$BRANCH" https://github.com/solutions-hpe/webui.git webui
+    cd webui
+    echo "# WebUI Configuration" > webui.conf
+    echo "BRANCH=$BRANCH" >> webui.conf
+else
+    cd "$WEBUI_DIR"
+    if [ -f webui.conf ]; then
+        source webui.conf
+        BRANCH=${BRANCH:-main}
+        echo "Preserving existing webui.conf; using branch: $BRANCH"
+    else
+        read -p "Enter the branch to use for webui (default: main): " BRANCH
+        BRANCH=${BRANCH:-main}
+        echo "# WebUI Configuration" > webui.conf
+        echo "BRANCH=$BRANCH" >> webui.conf
+    fi
+fi
 
 echo "Installing backend dependencies..."
 cd backend
