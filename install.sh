@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # WebUI Installation Script for Azure Debian VM
+# Version: 1.0.1
 # This script sets up the full-stack webui application
 
 set -e  # Exit on any error
+
+echo "WebUI Version: $(cat VERSION)"
 
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y

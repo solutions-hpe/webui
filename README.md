@@ -1,3 +1,5 @@
+<!-- Version: 1.0.1 -->
+
 # WebUI Dashboard
 
 A dashboard for managing simulation configurations, monitoring statuses, and integrating with HPE services.

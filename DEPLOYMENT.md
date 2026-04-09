@@ -1,3 +1,5 @@
+<!-- Version: 1.0.1 -->
+
 # WebUI Deployment Guide
 
 This guide explains how to deploy the WebUI dashboard on an Azure Debian VM using the provided installation script.
