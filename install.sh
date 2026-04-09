@@ -15,6 +15,9 @@ echo "Installing Node.js 22..."
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
+echo "Installing PM2 process manager..."
+sudo npm install -g pm2
+
 echo "Installing Apache web server..."
 sudo apt install -y apache2
 sudo a2enmod proxy proxy_http
@@ -81,6 +84,10 @@ npm install
 echo "Building frontend..."
 cd ../backend
 npm run build
+
+echo "Starting the webui application with PM2..."
+pm2 describe webui >/dev/null 2>&1 && pm2 restart webui || pm2 start server.js --name webui
+pm2 save
 
 echo "Setting up environment variables..."
 # Note: You need to manually edit backend/.env with your GITHUB_TOKEN and ARUBA credentials

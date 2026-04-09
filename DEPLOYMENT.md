@@ -35,6 +35,7 @@ The `install.sh` script automates the entire setup process.
    - Install Node.js 22.
    - Install PM2 for process management.
    - Install Apache web server and configure as reverse proxy.
+   - Start the backend Node app with PM2.
    - Clone the webui repository.
    - Install backend and frontend dependencies.
    - Build the frontend.
