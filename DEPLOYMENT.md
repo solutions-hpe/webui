@@ -36,7 +36,7 @@ The `install.sh` script automates the entire setup process.
    - Install PM2 for process management.
    - Install Apache web server and configure as reverse proxy.
    - Start the backend Node app with PM2.
-   - Clone the webui repository.
+   - Clone the webui repository to /opt/webui.
    - Install backend and frontend dependencies.
    - Build the frontend.
    - Copy `.env.example` to `.env` (you'll need to edit it).

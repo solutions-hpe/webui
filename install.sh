@@ -23,16 +23,15 @@ sudo apt install -y apache2
 sudo a2enmod proxy proxy_http
 sudo systemctl enable apache2
 
-WEBUI_DIR=""
-if [ -d ".git" ]; then
-    echo "Detected current directory is an existing webui repository."
-    WEBUI_DIR="$PWD"
-elif [ -d "$PWD/webui" ]; then
-    echo "Detected existing webui directory at $PWD/webui"
-    WEBUI_DIR="$PWD/webui"
+echo "Cleaning up any old webui install in current directory..."
+if [ -d "./webui" ]; then
+    echo "Removing old webui directory..."
+    rm -rf ./webui
 fi
 
-if [ -n "$WEBUI_DIR" ]; then
+WEBUI_DIR="/opt/webui"
+if [ -d "$WEBUI_DIR" ]; then
+    echo "Detected existing webui directory at $WEBUI_DIR"
     read -p "Existing webui directory detected at $WEBUI_DIR. Reuse it? [Y/n] " REUSE_DIR
     REUSE_DIR=${REUSE_DIR:-Y}
     if [[ "$REUSE_DIR" =~ ^[Yy] ]]; then
@@ -46,7 +45,7 @@ if [ -n "$WEBUI_DIR" ]; then
         fi
     else
         echo "Removing existing webui directory..."
-        rm -rf "$WEBUI_DIR"
+        sudo rm -rf "$WEBUI_DIR"
         WEBUI_DIR=""
     fi
 fi
@@ -54,9 +53,11 @@ fi
 if [ -z "$WEBUI_DIR" ]; then
     read -p "Enter the branch to use for webui (default: main): " BRANCH
     BRANCH=${BRANCH:-main}
-    echo "Cloning the webui repository..."
-    git clone -b "$BRANCH" https://github.com/solutions-hpe/webui.git webui
-    cd webui
+    echo "Cloning the webui repository to $WEBUI_DIR..."
+    sudo mkdir -p /opt
+    sudo git clone -b "$BRANCH" https://github.com/solutions-hpe/webui.git "$WEBUI_DIR"
+    sudo chown -R $SUDO_USER:$SUDO_USER "$WEBUI_DIR" 2>/dev/null || true  # Try to chown if SUDO_USER is set
+    cd "$WEBUI_DIR"
     echo "# WebUI Configuration" > webui.conf
     echo "BRANCH=$BRANCH" >> webui.conf
 else
@@ -86,8 +87,20 @@ cd ../backend
 npm run build
 
 echo "Starting the webui application with PM2..."
-pm2 describe webui >/dev/null 2>&1 && pm2 restart webui || pm2 start server.js --name webui
+if pm2 describe webui >/dev/null 2>&1; then
+    pm2 restart webui
+else
+    pm2 start server.js --name webui
+fi
 pm2 save
+
+echo "Verifying app startup..."
+pm2 status webui
+if ss -ltnp | grep -q ':3000'; then
+    echo "Port 3000 is listening. WebUI should be available on localhost:3000."
+else
+    echo "WARNING: Port 3000 is not listening. Run 'pm2 logs webui' to inspect startup errors."
+fi
 
 echo "Setting up environment variables..."
 # Note: You need to manually edit backend/.env with your GITHUB_TOKEN and ARUBA credentials
