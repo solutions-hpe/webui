@@ -43,4 +43,7 @@ npm run build
 echo "Restarting application..."
 pm2 restart webui
 
+echo "Ensuring permissions are maintained..."
+chown -R $(whoami):$(whoami) "$WEBUI_DIR" 2>/dev/null || true
+
 echo "Update complete at $(date)"
