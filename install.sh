@@ -15,6 +15,9 @@ echo "Installing Node.js 22..."
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
+echo "Installing Git..."
+sudo apt install -y git
+
 echo "Installing PM2 process manager..."
 sudo npm install -g pm2
 
@@ -63,6 +66,10 @@ if [ -z "$WEBUI_DIR" ]; then
     echo "Cloning the webui repository to $WEBUI_DIR..."
     sudo mkdir -p /opt
     sudo git clone -b "$BRANCH" https://github.com/solutions-hpe/webui.git "$WEBUI_DIR"
+    if [ ! -d "$WEBUI_DIR" ]; then
+        echo "ERROR: Failed to clone repository to $WEBUI_DIR"
+        exit 1
+    fi
     sudo chown -R $SUDO_USER:$SUDO_USER "$WEBUI_DIR" 2>/dev/null || true  # Try to chown if SUDO_USER is set
     cd "$WEBUI_DIR"
     echo "# WebUI Configuration" > webui.conf
