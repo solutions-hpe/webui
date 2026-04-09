@@ -30,7 +30,7 @@ The `install.sh` script automates the entire setup process.
 
 2. The script will:
    - Update system packages.
-   - Install Node.js 18.
+   - Install Node.js 20.
    - Install PM2 for process management.
    - Install Apache web server and configure as reverse proxy.
    - Clone the webui repository.
