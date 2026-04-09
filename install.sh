@@ -131,7 +131,16 @@ chmod +x update.sh
 
 echo "Scheduling daily update at 2 AM..."
 (crontab -l ; echo "0 2 * * * $PWD/update.sh") | crontab -
-
+echo "Verifying permissions..."
+if [ -n "$SUDO_USER" ]; then
+    OWNER=$(stat -c '%U' "$WEBUI_DIR" 2>/dev/null || echo "unknown")
+    if [ "$OWNER" != "$SUDO_USER" ]; then
+        echo "WARNING: $WEBUI_DIR is not owned by $SUDO_USER. Fixing..."
+        sudo chown -R "$SUDO_USER:$SUDO_USER" "$WEBUI_DIR"
+    fi
+else
+    echo "WARNING: SUDO_USER not set. Ensure $WEBUI_DIR is owned by the user running PM2."
+fi
 echo "Installation complete!"
 echo "The webui is running at http://your-vm-ip:3000"
 echo "Auto-updates are scheduled daily at 2 AM."
