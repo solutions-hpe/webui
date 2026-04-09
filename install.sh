@@ -18,6 +18,13 @@ sudo apt-get install -y nodejs
 echo "Installing PM2 process manager..."
 sudo npm install -g pm2
 
+# Determine the user for PM2 operations
+if [ -n "$SUDO_USER" ]; then
+    PM2_USER="$SUDO_USER"
+else
+    PM2_USER=$(whoami)
+fi
+
 echo "Installing Apache web server..."
 sudo apt install -y apache2
 sudo a2enmod proxy proxy_http
@@ -87,19 +94,19 @@ cd ../backend
 npm run build
 
 echo "Starting the webui application with PM2..."
-if pm2 describe webui >/dev/null 2>&1; then
-    pm2 restart webui
+if sudo -u "$PM2_USER" pm2 describe webui >/dev/null 2>&1; then
+    sudo -u "$PM2_USER" pm2 restart webui
 else
-    pm2 start server.js --name webui
+    sudo -u "$PM2_USER" pm2 start server.js --name webui
 fi
-pm2 save
+sudo -u "$PM2_USER" pm2 save
 
 echo "Verifying app startup..."
-pm2 status webui
+sudo -u "$PM2_USER" pm2 status webui
 if ss -ltnp | grep -q ':3000'; then
     echo "Port 3000 is listening. WebUI should be available on localhost:3000."
 else
-    echo "WARNING: Port 3000 is not listening. Run 'pm2 logs webui' to inspect startup errors."
+    echo "WARNING: Port 3000 is not listening. Run 'sudo -u $PM2_USER pm2 logs webui' to inspect startup errors."
 fi
 
 echo "Setting up environment variables..."
@@ -130,7 +137,7 @@ echo "Creating update script..."
 chmod +x update.sh
 
 echo "Scheduling daily update at 2 AM..."
-(crontab -l ; echo "0 2 * * * $PWD/update.sh") | crontab -
+(crontab -l ; echo "0 2 * * * $PWD/update.sh") | sudo -u "$PM2_USER" crontab -
 echo "Verifying permissions..."
 if [ -n "$SUDO_USER" ]; then
     OWNER=$(stat -c '%U' "$WEBUI_DIR" 2>/dev/null || echo "unknown")
@@ -144,6 +151,6 @@ fi
 echo "Installation complete!"
 echo "The webui is running at http://your-vm-ip:3000"
 echo "Auto-updates are scheduled daily at 2 AM."
-echo "To check status: pm2 status"
-echo "To view logs: pm2 logs webui"
-echo "To check cron: crontab -l"
+echo "To check status: sudo -u $PM2_USER pm2 status"
+echo "To view logs: sudo -u $PM2_USER pm2 logs webui"
+echo "To check cron: sudo -u $PM2_USER crontab -l"
